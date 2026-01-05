@@ -11,7 +11,7 @@ from fastapi.responses import StreamingResponse
 from ..config import KIRO_API_URL, map_model_name
 from ..models import state, RequestLog
 from ..kiro_api import build_headers, build_kiro_request, parse_event_stream
-from ..converters import generate_session_id, convert_openai_messages_to_kiro
+from ..converters import generate_session_id, convert_openai_messages_to_kiro, extract_images_from_content
 
 
 async def handle_chat_completions(request: Request):
@@ -38,7 +38,15 @@ async def handle_chat_completions(request: Request):
         raise HTTPException(500, f"Failed to get token for account {account.name}")
     
     user_content, history = convert_openai_messages_to_kiro(messages, model)
-    kiro_request = build_kiro_request(user_content, model, history)
+    
+    # 提取最后一条消息中的图片
+    images = []
+    if messages:
+        last_msg = messages[-1]
+        if last_msg.get("role") == "user":
+            _, images = extract_images_from_content(last_msg.get("content", ""))
+    
+    kiro_request = build_kiro_request(user_content, model, history, images=images)
     headers = build_headers(token)
     
     error_msg = None
@@ -64,6 +72,9 @@ async def handle_chat_completions(request: Request):
             
             if resp.status_code != 200:
                 error_msg = resp.text
+                # 打印详细错误信息
+                import logging
+                logging.error(f"Kiro API error {resp.status_code}: {resp.text[:500]}")
                 raise HTTPException(resp.status_code, resp.text)
             
             content = parse_event_stream(resp.content)

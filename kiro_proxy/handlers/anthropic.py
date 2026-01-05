@@ -13,7 +13,8 @@ from ..converters import (
     generate_session_id,
     convert_anthropic_tools_to_kiro,
     convert_anthropic_messages_to_kiro,
-    convert_kiro_response_to_anthropic
+    convert_kiro_response_to_anthropic,
+    extract_images_from_content
 )
 
 
@@ -45,9 +46,16 @@ async def handle_messages(request: Request):
     # 转换消息格式
     user_content, history = convert_anthropic_messages_to_kiro(messages, system)
     
+    # 提取最后一条消息中的图片
+    images = []
+    if messages:
+        last_msg = messages[-1]
+        if last_msg.get("role") == "user":
+            _, images = extract_images_from_content(last_msg.get("content", ""))
+    
     # 构建 Kiro 请求
     kiro_tools = convert_anthropic_tools_to_kiro(tools) if tools else None
-    kiro_request = build_kiro_request(user_content, model, history, kiro_tools)
+    kiro_request = build_kiro_request(user_content, model, history, kiro_tools, images)
     
     headers = build_headers(token)
     error_msg = None

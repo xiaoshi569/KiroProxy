@@ -1,6 +1,8 @@
 """协议转换模块 - Anthropic/OpenAI/Gemini <-> Kiro"""
 import json
 import hashlib
+import base64
+import re
 from typing import List, Dict, Any, Tuple, Optional
 
 
@@ -8,6 +10,69 @@ def generate_session_id(messages: list) -> str:
     """基于消息内容生成会话ID"""
     content = json.dumps(messages[:3], sort_keys=True)
     return hashlib.sha256(content.encode()).hexdigest()[:16]
+
+
+def extract_images_from_content(content) -> Tuple[str, List[dict]]:
+    """从消息内容中提取文本和图片
+    
+    Returns:
+        (text_content, images_list)
+    """
+    if isinstance(content, str):
+        return content, []
+    
+    if not isinstance(content, list):
+        return str(content), []
+    
+    text_parts = []
+    images = []
+    
+    for block in content:
+        if isinstance(block, str):
+            text_parts.append(block)
+        elif isinstance(block, dict):
+            block_type = block.get("type", "")
+            
+            if block_type == "text":
+                text_parts.append(block.get("text", ""))
+            
+            elif block_type == "image":
+                # Anthropic 格式
+                source = block.get("source", {})
+                media_type = source.get("media_type", "image/jpeg")
+                data = source.get("data", "")
+                
+                # 提取格式
+                fmt = "jpeg"
+                if "png" in media_type:
+                    fmt = "png"
+                elif "gif" in media_type:
+                    fmt = "gif"
+                elif "webp" in media_type:
+                    fmt = "webp"
+                
+                images.append({
+                    "format": fmt,
+                    "source": {"bytes": data}
+                })
+            
+            elif block_type == "image_url":
+                # OpenAI 格式
+                image_url = block.get("image_url", {})
+                url = image_url.get("url", "")
+                
+                if url.startswith("data:"):
+                    # data:image/jpeg;base64,/9j/4AAQ...
+                    match = re.match(r'data:image/(\w+);base64,(.+)', url)
+                    if match:
+                        fmt = match.group(1)
+                        data = match.group(2)
+                        images.append({
+                            "format": fmt,
+                            "source": {"bytes": data}
+                        })
+    
+    return "\n".join(text_parts), images
 
 
 # ==================== Anthropic 转换 ====================
@@ -138,6 +203,9 @@ def convert_openai_messages_to_kiro(messages: List[dict], model: str) -> Tuple[s
         if isinstance(content, list):
             content = " ".join([c.get("text", "") for c in content if c.get("type") == "text"])
         
+        if not content:
+            content = ""
+        
         if role == "system":
             system_content = content
         elif role == "user":
@@ -158,7 +226,14 @@ def convert_openai_messages_to_kiro(messages: List[dict], model: str) -> Tuple[s
                 }
             })
     
-    return user_content, history[:-1] if history else []
+    # 如果没有用户消息，返回空
+    if not user_content:
+        user_content = messages[-1].get("content", "") if messages else ""
+        if isinstance(user_content, list):
+            user_content = " ".join([c.get("text", "") for c in user_content if c.get("type") == "text"])
+    
+    # 历史不包含最后一条用户消息（它会作为当前输入）
+    return user_content, history[:-1] if len(history) > 1 else []
 
 
 # ==================== Gemini 转换 ====================

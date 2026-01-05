@@ -23,24 +23,41 @@ def build_kiro_request(
     user_content: str,
     model: str,
     history: List[dict] = None,
-    tools: List[dict] = None
+    tools: List[dict] = None,
+    images: List[dict] = None
 ) -> dict:
     """构建 Kiro API 请求体"""
-    request = {
-        "conversationState": {
-            "conversationId": str(uuid.uuid4()),
-            "history": history or []
-        },
-        "userInputMessage": {
-            "content": user_content,
-            "modelId": model,
-            "origin": "AI_EDITOR"
-        },
+    conversation_id = str(uuid.uuid4())
+    
+    user_input_message = {
+        "content": user_content,
+        "modelId": model,
+        "origin": "AI_EDITOR",
         "userInputMessageContext": {}
     }
     
+    # 添加图片
+    if images:
+        user_input_message["images"] = images
+    
+    # 添加工具定义
     if tools:
-        request["userInputMessageContext"]["tools"] = tools
+        user_input_message["userInputMessageContext"]["tools"] = tools
+    
+    current_message = {
+        "userInputMessage": user_input_message
+    }
+    
+    request = {
+        "conversationState": {
+            "agentContinuationId": str(uuid.uuid4()),
+            "agentTaskType": "vibe",
+            "chatTriggerType": "MANUAL",
+            "conversationId": conversation_id,
+            "currentMessage": current_message,
+            "history": history or []
+        }
+    }
     
     return request
 
