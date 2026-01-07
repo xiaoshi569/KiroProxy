@@ -62,34 +62,6 @@ th, td { padding: 0.75rem; text-align: left; border-bottom: 1px solid var(--bord
 th { font-weight: 500; color: var(--muted); }
 '''
 
-CSS_CHAT = '''
-.chat-box { height: 400px; overflow-y: auto; border: 1px solid var(--border); border-radius: 6px; padding: 1rem; margin-bottom: 1rem; background: var(--bg); }
-.msg { margin-bottom: 1rem; }
-.msg.user { text-align: right; }
-.msg.user .msg-content { display: inline-block; max-width: 80%; padding: 0.75rem 1rem; border-radius: 12px; background: var(--accent); color: var(--bg); white-space: pre-wrap; word-break: break-word; }
-.msg.ai .msg-content { display: block; max-width: 100%; padding: 0.75rem 1rem; border-radius: 12px; background: var(--card); border: 1px solid var(--border); }
-.msg.ai .msg-content p { margin: 0.5em 0; }
-.msg.ai .msg-content p:first-child { margin-top: 0; }
-.msg.ai .msg-content p:last-child { margin-bottom: 0; }
-.msg.ai .msg-content code { background: var(--bg); padding: 0.2em 0.4em; border-radius: 3px; font-size: 0.9em; }
-.msg.ai .msg-content pre { margin: 0.5em 0; padding: 0.75rem; overflow-x: auto; }
-.msg.ai .msg-content pre code { background: none; padding: 0; }
-.msg.ai .msg-content ul, .msg.ai .msg-content ol { margin: 0.5em 0; padding-left: 1.5em; }
-.msg.ai .msg-content h1, .msg.ai .msg-content h2, .msg.ai .msg-content h3 { margin: 0.75em 0 0.5em; font-size: 1.1em; }
-.msg.ai .msg-content table { margin: 0.5em 0; }
-.msg.ai .msg-content blockquote { margin: 0.5em 0; padding-left: 1em; border-left: 3px solid var(--border); color: var(--muted); }
-.thinking-box { margin-bottom: 0.5rem; }
-.thinking-toggle { cursor: pointer; color: var(--muted); font-size: 0.8rem; display: flex; align-items: center; gap: 0.25rem; }
-.thinking-toggle:hover { color: var(--text); }
-.thinking-content { display: none; margin-top: 0.5rem; padding: 0.5rem; background: var(--bg); border-radius: 4px; font-size: 0.85rem; color: var(--muted); white-space: pre-wrap; }
-.thinking-content.show { display: block; }
-.typing-indicator { display: inline-block; }
-.typing-indicator span { display: inline-block; width: 6px; height: 6px; background: var(--muted); border-radius: 50%; margin: 0 2px; animation: typing 1s infinite; }
-.typing-indicator span:nth-child(2) { animation-delay: 0.2s; }
-.typing-indicator span:nth-child(3) { animation-delay: 0.4s; }
-@keyframes typing { 0%, 100% { opacity: 0.3; } 50% { opacity: 1; } }
-'''
-
 CSS_ACCOUNTS = '''
 .account-card { border: 1px solid var(--border); border-radius: 8px; padding: 1rem; margin-bottom: 0.75rem; background: var(--card); }
 .account-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.75rem; }
@@ -111,7 +83,36 @@ CSS_API = '''
 .copy-btn { padding: 0.25rem 0.5rem; font-size: 0.75rem; background: var(--card); border: 1px solid var(--border); color: var(--text); }
 '''
 
-CSS_STYLES = CSS_BASE + CSS_LAYOUT + CSS_COMPONENTS + CSS_FORMS + CSS_CHAT + CSS_ACCOUNTS + CSS_API
+CSS_DOCS = '''
+.docs-container { display: flex; gap: 1.5rem; min-height: 500px; }
+.docs-nav { width: 200px; flex-shrink: 0; }
+.docs-nav-item { display: block; padding: 0.5rem 0.75rem; margin-bottom: 0.25rem; border-radius: 6px; cursor: pointer; font-size: 0.875rem; color: var(--text); text-decoration: none; transition: background 0.2s; }
+.docs-nav-item:hover { background: var(--bg); }
+.docs-nav-item.active { background: var(--accent); color: var(--bg); }
+.docs-content { flex: 1; min-width: 0; }
+.docs-content h1 { font-size: 1.5rem; margin-bottom: 1rem; padding-bottom: 0.5rem; border-bottom: 1px solid var(--border); }
+.docs-content h2 { font-size: 1.25rem; margin: 1.5rem 0 0.75rem; color: var(--text); }
+.docs-content h3 { font-size: 1rem; margin: 1rem 0 0.5rem; color: var(--text); }
+.docs-content h4 { font-size: 0.9rem; margin: 0.75rem 0 0.5rem; color: var(--muted); }
+.docs-content p { margin: 0.5rem 0; }
+.docs-content ul, .docs-content ol { margin: 0.5rem 0; padding-left: 1.5rem; }
+.docs-content li { margin: 0.25rem 0; }
+.docs-content code { background: var(--bg); padding: 0.2em 0.4em; border-radius: 3px; font-size: 0.9em; }
+.docs-content pre { margin: 0.75rem 0; }
+.docs-content pre code { background: none; padding: 0; }
+.docs-content table { margin: 0.75rem 0; }
+.docs-content blockquote { margin: 0.75rem 0; padding: 0.5rem 1rem; border-left: 3px solid var(--border); color: var(--muted); background: var(--bg); border-radius: 0 6px 6px 0; }
+.docs-content hr { margin: 1.5rem 0; border: none; border-top: 1px solid var(--border); }
+.docs-content a { color: var(--info); text-decoration: none; }
+.docs-content a:hover { text-decoration: underline; }
+@media (max-width: 768px) {
+  .docs-container { flex-direction: column; }
+  .docs-nav { width: 100%; display: flex; flex-wrap: wrap; gap: 0.5rem; }
+  .docs-nav-item { margin-bottom: 0; }
+}
+'''
+
+CSS_STYLES = CSS_BASE + CSS_LAYOUT + CSS_COMPONENTS + CSS_FORMS + CSS_ACCOUNTS + CSS_API + CSS_DOCS
 
 
 # ==================== HTML 模板 ====================
@@ -132,11 +133,21 @@ HTML_HEADER = '''
   <div class="tab" data-tab="accounts">账号</div>
   <div class="tab" data-tab="logs">日志</div>
   <div class="tab" data-tab="api">API</div>
-  <div class="tab" data-tab="docs">文档</div>
 </div>
 '''
 
-HTML_CHAT = ''
+HTML_HELP = '''
+<div class="panel active" id="help">
+  <div class="card" style="padding:1rem">
+    <div class="docs-container">
+      <nav class="docs-nav" id="docsNav"></nav>
+      <div class="docs-content" id="docsContent">
+        <p style="color:var(--muted)">加载中...</p>
+      </div>
+    </div>
+  </div>
+</div>
+'''
 
 HTML_FLOWS = '''
 <div class="panel" id="flows">
@@ -190,6 +201,7 @@ HTML_MONITOR = '''
   </div>
 </div>
 '''
+
 
 HTML_ACCOUNTS = '''
 <div class="panel" id="accounts">
@@ -296,84 +308,7 @@ API Key: any
 </div>
 '''
 
-HTML_DOCS = '''
-<div class="panel" id="docs">
-  <div class="card">
-    <h3>模型对照表</h3>
-    <table>
-      <thead><tr><th>Kiro 模型</th><th>能力</th><th>Claude Code</th><th>Codex</th></tr></thead>
-      <tbody>
-        <tr><td><code>claude-sonnet-4</code></td><td>⭐⭐⭐ 推荐</td><td><code>claude-sonnet-4</code></td><td><code>gpt-4o</code></td></tr>
-        <tr><td><code>claude-sonnet-4.5</code></td><td>⭐⭐⭐⭐ 更强</td><td><code>claude-sonnet-4.5</code></td><td><code>gpt-4o</code></td></tr>
-        <tr><td><code>claude-haiku-4.5</code></td><td>⚡ 快速</td><td><code>claude-haiku-4.5</code></td><td><code>gpt-4o-mini</code></td></tr>
-        <tr><td><code>claude-opus-4.5</code></td><td>⭐⭐⭐⭐⭐ 最强</td><td><code>claude-opus-4.5</code></td><td><code>o1</code></td></tr>
-      </tbody>
-    </table>
-  </div>
-  <div class="card">
-    <h3>新功能 v1.5.0</h3>
-    <ul style="color:var(--muted);font-size:0.875rem;padding-left:1.5rem">
-      <li><strong>用量查询</strong> - 查询账号配额使用情况</li>
-      <li><strong>多登录方式</strong> - 支持 Google/GitHub/AWS 登录</li>
-      <li><strong>流量监控</strong> - 完整的 LLM 请求监控</li>
-      <li><strong>浏览器选择</strong> - 自动检测并选择浏览器</li>
-      <li><strong>Token 自动刷新</strong> - 检测过期自动刷新</li>
-      <li><strong>配额管理</strong> - 429 自动冷却和恢复</li>
-    </ul>
-  </div>
-</div>
-'''
-
-HTML_HELP = '''
-<div class="panel active" id="help">
-  <div class="card">
-    <h3>AI 助手 <span style="font-size:0.75rem;color:var(--muted);font-weight:normal">问我如何使用 Kiro Proxy（由 GLM-4.7 提供）</span></h3>
-    <div class="chat-box" id="helpChatBox" style="height:320px"></div>
-    <div class="input-row" style="margin-top:1rem">
-      <input type="text" id="helpInput" placeholder="问我任何关于 Kiro Proxy 的问题..." onkeydown="if(event.key==='Enter')sendHelp()">
-      <button onclick="sendHelp()" id="helpSendBtn">发送</button>
-      <button class="secondary" onclick="clearHelp()">清空</button>
-    </div>
-    <div style="margin-top:0.75rem">
-      <span style="font-size:0.75rem;color:var(--muted)">快捷问题：</span>
-      <button class="secondary small" onclick="askQuick('如何配置 Claude Code 使用 Kiro Proxy？')">配置 Claude Code</button>
-      <button class="secondary small" onclick="askQuick('如何添加多个账号？')">添加账号</button>
-      <button class="secondary small" onclick="askQuick('遇到 429 错误怎么办？')">429 错误</button>
-      <button class="secondary small" onclick="askQuick('Token 过期了怎么刷新？')">刷新 Token</button>
-    </div>
-  </div>
-  <div class="card">
-    <h3>常见问题</h3>
-    <details style="margin-bottom:0.5rem">
-      <summary style="cursor:pointer;font-weight:500">如何获取 Kiro Token？</summary>
-      <p style="color:var(--muted);font-size:0.875rem;padding:0.5rem 0 0 1rem">
-        方式一：点击"在线登录"，选择 Google/GitHub/AWS 登录<br>
-        方式二：打开 Kiro IDE 登录后，点击"扫描 Token"
-      </p>
-    </details>
-    <details style="margin-bottom:0.5rem">
-      <summary style="cursor:pointer;font-weight:500">支持哪些 AI 客户端？</summary>
-      <p style="color:var(--muted);font-size:0.875rem;padding:0.5rem 0 0 1rem">
-        Claude Code (VSCode 插件)、Codex CLI、Gemini CLI 等支持 OpenAI/Anthropic 协议的客户端
-      </p>
-    </details>
-    <details style="margin-bottom:0.5rem">
-      <summary style="cursor:pointer;font-weight:500">为什么会出现 429 错误？</summary>
-      <p style="color:var(--muted);font-size:0.875rem;padding:0.5rem 0 0 1rem">
-        Kiro 有请求频率限制，超限后会返回 429。代理会自动将该账号冷却 5 分钟，并切换到其他可用账号。
-      </p>
-    </details>
-    <details>
-      <summary style="cursor:pointer;font-weight:500">对话太长怎么办？</summary>
-      <p style="color:var(--muted);font-size:0.875rem;padding:0.5rem 0 0 1rem">
-        Kiro 有输入长度限制。在 Claude Code 中输入 /clear 清空对话，然后告诉 AI 你之前在做什么。
-      </p>
-    </details>
-  </div>
-</div>
-'''
-
-HTML_BODY = HTML_HEADER + HTML_HELP + HTML_FLOWS + HTML_MONITOR + HTML_ACCOUNTS + HTML_LOGS + HTML_API + HTML_DOCS
+HTML_BODY = HTML_HEADER + HTML_HELP + HTML_FLOWS + HTML_MONITOR + HTML_ACCOUNTS + HTML_LOGS + HTML_API
 
 
 # ==================== JavaScript ====================
@@ -395,6 +330,12 @@ function formatUptime(s){
   if(s<60)return s+'秒';
   if(s<3600)return Math.floor(s/60)+'分钟';
   return Math.floor(s/3600)+'小时'+Math.floor((s%3600)/60)+'分钟';
+}
+
+function escapeHtml(text){
+  const div=document.createElement('div');
+  div.textContent=text;
+  return div.innerHTML;
 }
 '''
 
@@ -434,9 +375,79 @@ $('#baseUrl').textContent=location.origin;
 $$('.pyUrl').forEach(e=>e.textContent=location.origin);
 '''
 
-JS_MODELS = ''
+JS_DOCS = '''
+// 文档浏览
+let docsData = [];
+let currentDoc = null;
 
-JS_CHAT = ''
+// 简单的 Markdown 渲染
+function renderMarkdown(text) {
+  return text
+    .replace(/```(\\w*)\\n([\\s\\S]*?)```/g, '<pre><code class="lang-$1">$2</code></pre>')
+    .replace(/`([^`]+)`/g, '<code>$1</code>')
+    .replace(/^#### (.+)$/gm, '<h4>$1</h4>')
+    .replace(/^### (.+)$/gm, '<h3>$1</h3>')
+    .replace(/^## (.+)$/gm, '<h2>$1</h2>')
+    .replace(/^# (.+)$/gm, '<h1>$1</h1>')
+    .replace(/\\*\\*(.+?)\\*\\*/g, '<strong>$1</strong>')
+    .replace(/\\*(.+?)\\*/g, '<em>$1</em>')
+    .replace(/\\[([^\\]]+)\\]\\(([^)]+)\\)/g, '<a href="$2" target="_blank">$1</a>')
+    .replace(/^- (.+)$/gm, '<li>$1</li>')
+    .replace(/(<li>.*<\\/li>\\n?)+/g, '<ul>$&</ul>')
+    .replace(/^\\d+\\. (.+)$/gm, '<li>$1</li>')
+    .replace(/^> (.+)$/gm, '<blockquote>$1</blockquote>')
+    .replace(/^---$/gm, '<hr>')
+    .replace(/\\|(.+)\\|/g, function(match) {
+      const cells = match.split('|').filter(c => c.trim());
+      if (cells.every(c => /^[\\s-:]+$/.test(c))) return '';
+      const tag = match.includes('---') ? 'th' : 'td';
+      return '<tr>' + cells.map(c => '<' + tag + '>' + c.trim() + '</' + tag + '>').join('') + '</tr>';
+    })
+    .replace(/(<tr>.*<\\/tr>\\n?)+/g, '<table>$&</table>')
+    .replace(/\\n\\n/g, '</p><p>')
+    .replace(/\\n/g, '<br>');
+}
+
+async function loadDocs() {
+  try {
+    const r = await fetch('/api/docs');
+    const d = await r.json();
+    docsData = d.docs || [];
+    
+    // 渲染导航
+    $('#docsNav').innerHTML = docsData.map((doc, i) => 
+      '<a class="docs-nav-item' + (i === 0 ? ' active' : '') + '" data-id="' + doc.id + '" onclick="showDoc(\\'' + doc.id + '\\')">' + doc.title + '</a>'
+    ).join('');
+    
+    // 显示第一个文档
+    if (docsData.length > 0) {
+      showDoc(docsData[0].id);
+    }
+  } catch (e) {
+    $('#docsContent').innerHTML = '<p style="color:var(--error)">加载文档失败</p>';
+  }
+}
+
+async function showDoc(id) {
+  // 更新导航状态
+  $$('.docs-nav-item').forEach(item => {
+    item.classList.toggle('active', item.dataset.id === id);
+  });
+  
+  // 获取文档内容
+  try {
+    const r = await fetch('/api/docs/' + id);
+    const d = await r.json();
+    currentDoc = d;
+    $('#docsContent').innerHTML = renderMarkdown(d.content);
+  } catch (e) {
+    $('#docsContent').innerHTML = '<p style="color:var(--error)">加载文档失败</p>';
+  }
+}
+
+// 页面加载时加载文档
+loadDocs();
+'''
 
 JS_STATS = '''
 // Stats
@@ -537,7 +548,6 @@ async function loadAccounts(){
             <div class="account-meta-item"><span>错误数</span><span>${a.error_count}</span></div>
             <div class="account-meta-item"><span>Token</span><span class="badge ${a.token_expired?'error':a.token_expiring_soon?'warn':'success'}">${a.token_expired?'已过期':a.token_expiring_soon?'即将过期':'有效'}</span></div>
             ${a.cooldown_remaining?`<div class="account-meta-item"><span>冷却剩余</span><span>${a.cooldown_remaining}秒</span></div>`:''}
-            ${a.auth_method==='idc'?`<div class="account-meta-item"><span>IdC配置</span><span class="badge ${a.idc_config_complete?'success':'error'}">${a.idc_config_complete?'完整':'不完整'}</span></div>`:''}
           </div>
           <div id="usage-${a.id}" class="account-usage" style="display:none;margin-top:0.75rem;padding:0.75rem;background:var(--bg);border-radius:6px"></div>
           <div class="account-actions">
@@ -558,7 +568,6 @@ async function queryUsage(id){
   const usageDiv=$('#usage-'+id);
   usageDiv.style.display='block';
   usageDiv.innerHTML='<span style="color:var(--muted)">查询中...</span>';
-  
   try{
     const r=await fetch('/api/accounts/'+id+'/usage');
     const d=await r.json();
@@ -579,8 +588,6 @@ async function queryUsage(id){
           <div><span style="color:var(--muted)">总额:</span> ${u.usage_limit.toFixed(2)}</div>
           <div><span style="color:var(--muted)">余额:</span> ${u.balance.toFixed(2)}</div>
           <div><span style="color:var(--muted)">使用率:</span> ${pct}%</div>
-          ${u.free_trial_limit>0?`<div><span style="color:var(--muted)">试用:</span> ${u.free_trial_usage.toFixed(2)}/${u.free_trial_limit.toFixed(2)}</div>`:''}
-          ${u.bonus_limit>0?`<div><span style="color:var(--muted)">奖励:</span> ${u.bonus_usage.toFixed(2)}/${u.bonus_limit.toFixed(2)}</div>`:''}
         </div>
       `;
     }else{
@@ -621,24 +628,7 @@ async function viewAccountDetail(id){
   try{
     const r=await fetch('/api/accounts/'+id);
     const d=await r.json();
-    const info=`账号: ${d.name}
-ID: ${d.id}
-状态: ${d.status}
-Machine ID: ${d.machine_id}
-
-凭证信息:
-- Access Token: ${d.credentials?.has_access_token?'有':'无'}
-- Refresh Token: ${d.credentials?.has_refresh_token?'有':'无'}
-- Client ID: ${d.credentials?.has_client_id?'有':'无'}
-- 认证方式: ${d.credentials?.auth_method||'未知'}
-- 区域: ${d.credentials?.region||'未知'}
-- 过期时间: ${d.credentials?.expires_at||'未知'}
-- Token 状态: ${d.credentials?.is_expired?'已过期':d.credentials?.is_expiring_soon?'即将过期':'有效'}
-
-统计:
-- 请求数: ${d.request_count}
-- 错误数: ${d.error_count}`;
-    alert(info);
+    alert(`账号: ${d.name}\\nID: ${d.id}\\n状态: ${d.status}\\n请求数: ${d.request_count}\\n错误数: ${d.error_count}`);
   }catch(e){alert('获取详情失败: '+e.message)}
 }
 
@@ -677,24 +667,15 @@ async function scanTokens(){
     const list=$('#scanList');
     if(d.tokens&&d.tokens.length>0){
       panel.style.display='block';
-      list.innerHTML=d.tokens.map(t=>{
-        const authBadge=t.auth_method==='idc'?'info':'success';
-        const authText=t.auth_method==='idc'?'IdC':'Social';
-        const idcWarning=t.auth_method==='idc'&&t.idc_config_complete===false?'<span class="badge error" style="margin-left:0.5rem">配置不完整</span>':'';
-        return `
+      list.innerHTML=d.tokens.map(t=>`
         <div style="display:flex;justify-content:space-between;align-items:center;padding:0.75rem;border:1px solid var(--border);border-radius:6px;margin-bottom:0.5rem">
           <div>
             <div>${t.name}</div>
             <div style="color:var(--muted);font-size:0.75rem">${t.path}</div>
-            <div style="font-size:0.75rem;margin-top:0.25rem">
-              <span class="badge ${t.has_refresh_token?'success':'warn'}">${t.has_refresh_token?'可刷新':'无刷新'}</span>
-              <span class="badge ${authBadge}" style="margin-left:0.25rem">${authText}</span>
-              ${idcWarning}
-            </div>
           </div>
           ${t.already_added?'<span class="badge info">已添加</span>':`<button class="secondary small" onclick="addFromScan('${t.path}','${t.name}')">添加</button>`}
         </div>
-      `}).join('');
+      `).join('');
     }else{
       alert('未找到 Token 文件');
     }
@@ -725,29 +706,26 @@ async function checkTokens(){
     let msg='Token 状态:\\n\\n';
     (d.accounts||[]).forEach(a=>{
       const status=a.valid?'✅ 有效':'❌ 无效';
-      const extra=a.expiring_soon?' (即将过期)':'';
-      const refresh=a.has_refresh_token?' [可刷新]':' [无法刷新]';
-      msg+=`${a.name}: ${status}${extra}${refresh}\\n`;
+      msg+=`${a.name}: ${status}\\n`;
     });
     alert(msg);
   }catch(e){alert('检查失败: '+e.message)}
 }
+'''
 
+JS_LOGIN = '''
 // Kiro 在线登录
 let loginPollTimer=null;
-let availableBrowsers=[];
 let selectedBrowser='default';
 
 async function showLoginOptions(){
   try{
     const r=await fetch('/api/browsers');
     const d=await r.json();
-    availableBrowsers=d.browsers||[];
-    if(availableBrowsers.length>0){
-      $('#browserList').innerHTML=availableBrowsers.map(b=>`
-        <button class="${b.id==='default'?'':'secondary'} small" onclick="selectBrowser('${b.id}',this)" data-browser="${b.id}">
-          ${b.name}${b.supports_incognito?' *':''}
-        </button>
+    const browsers=d.browsers||[];
+    if(browsers.length>0){
+      $('#browserList').innerHTML=browsers.map(b=>`
+        <button class="${b.id==='default'?'':'secondary'} small" onclick="selectBrowser('${b.id}',this)" data-browser="${b.id}">${b.name}</button>
       `).join('');
     }
     selectedBrowser='default';
@@ -766,7 +744,6 @@ function selectBrowser(id,btn){
 async function startSocialLogin(provider){
   const incognito=$('#incognitoMode')?.checked||false;
   $('#loginOptions').style.display='none';
-  
   try{
     const r=await fetch('/api/kiro/social/start',{
       method:'POST',
@@ -774,10 +751,7 @@ async function startSocialLogin(provider){
       body:JSON.stringify({provider,browser:selectedBrowser,incognito})
     });
     const d=await r.json();
-    if(!d.ok){
-      alert('启动登录失败: '+d.error);
-      return;
-    }
+    if(!d.ok){alert('启动登录失败: '+d.error);return;}
     showSocialLoginPanel(d.provider);
   }catch(e){alert('启动登录失败: '+e.message)}
 }
@@ -798,48 +772,31 @@ function showSocialLoginPanel(provider){
 
 async function handleSocialCallback(){
   const url=$('#callbackUrl').value;
-  if(!url){
-    alert('请粘贴回调 URL');
-    return;
-  }
-  
+  if(!url){alert('请粘贴回调 URL');return;}
   try{
     const urlObj=new URL(url);
     const code=urlObj.searchParams.get('code');
     const state=urlObj.searchParams.get('state');
-    
-    if(!code||!state){
-      alert('无效的回调 URL');
-      return;
-    }
-    
+    if(!code||!state){alert('无效的回调 URL');return;}
     $('#loginStatus').textContent='正在交换 Token...';
-    
     const r=await fetch('/api/kiro/social/exchange',{
       method:'POST',
       headers:{'Content-Type':'application/json'},
       body:JSON.stringify({code,state})
     });
     const d=await r.json();
-    
     if(d.ok&&d.completed){
       $('#loginStatus').textContent='✅ '+d.message;
       $('#loginStatus').style.color='var(--success)';
-      setTimeout(()=>{
-        $('#loginPanel').style.display='none';
-        loadAccounts();
-      },1500);
+      setTimeout(()=>{$('#loginPanel').style.display='none';loadAccounts();},1500);
     }else{
       $('#loginStatus').textContent='❌ '+(d.error||'登录失败');
       $('#loginStatus').style.color='var(--error)';
     }
-  }catch(e){
-    alert('处理回调失败: '+e.message);
-  }
+  }catch(e){alert('处理回调失败: '+e.message)}
 }
 
 async function startAwsLogin(){
-  const incognito=$('#incognitoMode')?.checked||false;
   $('#loginOptions').style.display='none';
   startKiroLogin(selectedBrowser);
 }
@@ -853,10 +810,7 @@ async function startKiroLogin(browser='default'){
       body:JSON.stringify({browser,incognito})
     });
     const d=await r.json();
-    if(!d.ok){
-      alert('启动登录失败: '+d.error);
-      return;
-    }
+    if(!d.ok){alert('启动登录失败: '+d.error);return;}
     showLoginPanel(d);
     startLoginPoll();
   }catch(e){alert('启动登录失败: '+e.message)}
@@ -887,33 +841,18 @@ async function pollLogin(){
   try{
     const r=await fetch('/api/kiro/login/poll');
     const d=await r.json();
-    if(!d.ok){
-      $('#loginStatus').textContent='错误: '+d.error;
-      $('#loginStatus').style.color='var(--error)';
-      stopLoginPoll();
-      return;
-    }
+    if(!d.ok){$('#loginStatus').textContent='错误: '+d.error;stopLoginPoll();return;}
     if(d.completed){
       $('#loginStatus').textContent='✅ 登录成功！';
       $('#loginStatus').style.color='var(--success)';
       stopLoginPoll();
-      setTimeout(()=>{
-        $('#loginPanel').style.display='none';
-        loadAccounts();
-      },1500);
-    }else{
-      $('#loginStatus').textContent='等待授权...';
+      setTimeout(()=>{$('#loginPanel').style.display='none';loadAccounts();},1500);
     }
-  }catch(e){
-    $('#loginStatus').textContent='轮询失败: '+e.message;
-  }
+  }catch(e){$('#loginStatus').textContent='轮询失败: '+e.message}
 }
 
 function stopLoginPoll(){
-  if(loginPollTimer){
-    clearInterval(loginPollTimer);
-    loginPollTimer=null;
-  }
+  if(loginPollTimer){clearInterval(loginPollTimer);loginPollTimer=null;}
 }
 
 async function cancelKiroLogin(){
@@ -922,6 +861,7 @@ async function cancelKiroLogin(){
   $('#loginPanel').style.display='none';
 }
 '''
+
 
 JS_FLOWS = '''
 // Flow Monitor
@@ -950,15 +890,12 @@ async function loadFlows(){
     if(protocol)url+=`&protocol=${protocol}`;
     if(state)url+=`&state=${state}`;
     if(search)url+=`&search=${encodeURIComponent(search)}`;
-    
     const r=await fetch(url);
     const d=await r.json();
-    
     if(!d.flows||d.flows.length===0){
       $('#flowList').innerHTML='<p style="color:var(--muted)">暂无请求记录</p>';
       return;
     }
-    
     $('#flowList').innerHTML=d.flows.map(f=>{
       const stateBadge={completed:'success',error:'error',streaming:'info',pending:'warn'}[f.state]||'info';
       const stateText={completed:'完成',error:'错误',streaming:'流式中',pending:'等待中'}[f.state]||f.state;
@@ -966,7 +903,6 @@ async function loadFlows(){
       const duration=f.timing.duration_ms?f.timing.duration_ms.toFixed(0)+'ms':'-';
       const model=f.request?.model||'-';
       const tokens=f.response?.usage?(f.response.usage.input_tokens+'/'+f.response.usage.output_tokens):'-';
-      
       return `
         <div style="display:flex;justify-content:space-between;align-items:center;padding:0.75rem;border:1px solid var(--border);border-radius:6px;margin-bottom:0.5rem;cursor:pointer" onclick="viewFlow('${f.id}')">
           <div style="flex:1">
@@ -979,9 +915,7 @@ async function loadFlows(){
               ${time} · ${duration} · ${tokens} tokens · ${f.protocol}
             </div>
           </div>
-          <div style="display:flex;gap:0.5rem">
-            <button class="secondary small" onclick="event.stopPropagation();toggleBookmark('${f.id}',${!f.bookmarked})">${f.bookmarked?'取消':'收藏'}</button>
-          </div>
+          <button class="secondary small" onclick="event.stopPropagation();toggleBookmark('${f.id}',${!f.bookmarked})">${f.bookmarked?'取消':'收藏'}</button>
         </div>
       `;
     }).join('');
@@ -992,84 +926,29 @@ async function viewFlow(id){
   try{
     const r=await fetch('/api/flows/'+id);
     const f=await r.json();
-    
-    let html=`
-      <div style="margin-bottom:1rem">
-        <strong>ID:</strong> ${f.id}<br>
-        <strong>协议:</strong> ${f.protocol}<br>
-        <strong>状态:</strong> ${f.state}<br>
-        <strong>账号:</strong> ${f.account_name||f.account_id||'N/A'}<br>
-        <strong>时间:</strong> ${new Date(f.timing.created_at*1000).toLocaleString()}<br>
-        <strong>延迟:</strong> ${f.timing.duration_ms?f.timing.duration_ms.toFixed(0)+'ms':'N/A'}<br>
-      </div>
-    `;
-    
+    let html=`<div style="margin-bottom:1rem"><strong>ID:</strong> ${f.id}<br><strong>协议:</strong> ${f.protocol}<br><strong>状态:</strong> ${f.state}<br><strong>时间:</strong> ${new Date(f.timing.created_at*1000).toLocaleString()}<br><strong>延迟:</strong> ${f.timing.duration_ms?f.timing.duration_ms.toFixed(0)+'ms':'N/A'}</div>`;
     if(f.request){
-      html+=`
-        <h4 style="margin-bottom:0.5rem">请求</h4>
-        <div style="margin-bottom:1rem">
-          <strong>模型:</strong> ${f.request.model}<br>
-          <strong>流式:</strong> ${f.request.stream?'是':'否'}<br>
-          <strong>消息数:</strong> ${f.request.messages?.length||0}<br>
-        </div>
-      `;
-      if(f.request.system){
-        html+=`<div style="margin-bottom:0.5rem"><strong>System:</strong></div><pre style="max-height:100px;overflow:auto">${escapeHtml(f.request.system)}</pre>`;
-      }
-      if(f.request.messages&&f.request.messages.length>0){
-        html+=`<div style="margin-bottom:0.5rem"><strong>Messages:</strong></div>`;
-        f.request.messages.slice(-3).forEach(m=>{
-          const content=typeof m.content==='string'?m.content:JSON.stringify(m.content);
-          html+=`<div style="margin-bottom:0.5rem"><span class="badge info">${m.role}</span> ${escapeHtml(content.substring(0,200))}${content.length>200?'...':''}</div>`;
-        });
-      }
+      html+=`<h4 style="margin-bottom:0.5rem">请求</h4><div style="margin-bottom:1rem"><strong>模型:</strong> ${f.request.model}<br><strong>流式:</strong> ${f.request.stream?'是':'否'}</div>`;
     }
-    
     if(f.response){
-      html+=`
-        <h4 style="margin-top:1rem;margin-bottom:0.5rem">响应</h4>
-        <div style="margin-bottom:1rem">
-          <strong>状态码:</strong> ${f.response.status_code}<br>
-          <strong>停止原因:</strong> ${f.response.stop_reason||'N/A'}<br>
-          <strong>Token:</strong> ${f.response.usage?.input_tokens||0} in / ${f.response.usage?.output_tokens||0} out<br>
-        </div>
-      `;
-      if(f.response.content){
-        html+=`<div style="margin-bottom:0.5rem"><strong>Content:</strong></div><pre style="max-height:200px;overflow:auto">${escapeHtml(f.response.content.substring(0,2000))}${f.response.content.length>2000?'...':''}</pre>`;
-      }
+      html+=`<h4 style="margin-top:1rem;margin-bottom:0.5rem">响应</h4><div><strong>状态码:</strong> ${f.response.status_code}<br><strong>Token:</strong> ${f.response.usage?.input_tokens||0} in / ${f.response.usage?.output_tokens||0} out</div>`;
     }
-    
     if(f.error){
-      html+=`
-        <h4 style="margin-top:1rem;margin-bottom:0.5rem;color:var(--error)">错误</h4>
-        <div>
-          <strong>类型:</strong> ${f.error.type}<br>
-          <strong>消息:</strong> ${f.error.message}<br>
-        </div>
-      `;
+      html+=`<h4 style="margin-top:1rem;margin-bottom:0.5rem;color:var(--error)">错误</h4><div><strong>类型:</strong> ${f.error.type}<br><strong>消息:</strong> ${f.error.message}</div>`;
     }
-    
     $('#flowDetailContent').innerHTML=html;
     $('#flowDetail').style.display='block';
   }catch(e){alert('获取详情失败: '+e.message)}
 }
 
 async function toggleBookmark(id,bookmarked){
-  await fetch('/api/flows/'+id+'/bookmark',{
-    method:'POST',
-    headers:{'Content-Type':'application/json'},
-    body:JSON.stringify({bookmarked})
-  });
+  await fetch('/api/flows/'+id+'/bookmark',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({bookmarked})});
   loadFlows();
 }
 
 async function exportFlows(){
   try{
-    const r=await fetch('/api/flows/export',{
-      method:'POST',
-      headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({format:'json'})
-    });
+    const r=await fetch('/api/flows/export',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({format:'json'})});
     const d=await r.json();
     const blob=new Blob([d.content],{type:'application/json'});
     const url=URL.createObjectURL(blob);
@@ -1079,169 +958,9 @@ async function exportFlows(){
     a.click();
   }catch(e){alert('导出失败: '+e.message)}
 }
-
-function escapeHtml(text){
-  const div=document.createElement('div');
-  div.textContent=text;
-  return div.innerHTML;
-}
 '''
 
-JS_HELP = '''
-// AI 助手 (流式输出 + Markdown 渲染)
-let helpMessages = [];
-
-// 简单的 Markdown 渲染
-function renderMarkdown(text) {
-  return text
-    // 代码块
-    .replace(/```(\\w*)\\n([\\s\\S]*?)```/g, '<pre><code class="lang-$1">$2</code></pre>')
-    // 行内代码
-    .replace(/`([^`]+)`/g, '<code>$1</code>')
-    // 标题
-    .replace(/^### (.+)$/gm, '<h3>$1</h3>')
-    .replace(/^## (.+)$/gm, '<h2>$1</h2>')
-    .replace(/^# (.+)$/gm, '<h1>$1</h1>')
-    // 粗体和斜体
-    .replace(/\\*\\*(.+?)\\*\\*/g, '<strong>$1</strong>')
-    .replace(/\\*(.+?)\\*/g, '<em>$1</em>')
-    // 链接
-    .replace(/\\[([^\\]]+)\\]\\(([^)]+)\\)/g, '<a href="$2" target="_blank">$1</a>')
-    // 列表
-    .replace(/^- (.+)$/gm, '<li>$1</li>')
-    .replace(/^\\d+\\. (.+)$/gm, '<li>$1</li>')
-    // 引用
-    .replace(/^> (.+)$/gm, '<blockquote>$1</blockquote>')
-    // 段落
-    .replace(/\\n\\n/g, '</p><p>')
-    .replace(/\\n/g, '<br>');
-}
-
-function addHelpMsg(role, text, thinking = '') {
-  const box = $('#helpChatBox');
-  const div = document.createElement('div');
-  div.className = 'msg ' + (role === 'user' ? 'user' : 'ai');
-  
-  if (role === 'user') {
-    div.innerHTML = '<div class="msg-content">' + text.replace(/</g, '&lt;') + '</div>';
-  } else {
-    let html = '';
-    if (thinking) {
-      const thinkingId = 'think-' + Date.now();
-      html += '<div class="thinking-box">';
-      html += '<div class="thinking-toggle" onclick="toggleThinking(\\'' + thinkingId + '\\')">';
-      html += '<span>💭</span> 思考过程 <span id="' + thinkingId + '-arrow">▶</span>';
-      html += '</div>';
-      html += '<div class="thinking-content" id="' + thinkingId + '">' + thinking.replace(/</g, '&lt;') + '</div>';
-      html += '</div>';
-    }
-    html += '<div class="msg-content">' + renderMarkdown(text) + '</div>';
-    div.innerHTML = html;
-  }
-  
-  box.appendChild(div);
-  box.scrollTop = box.scrollHeight;
-  return div;
-}
-
-function toggleThinking(id) {
-  const content = document.getElementById(id);
-  const arrow = document.getElementById(id + '-arrow');
-  if (content.classList.contains('show')) {
-    content.classList.remove('show');
-    arrow.textContent = '▶';
-  } else {
-    content.classList.add('show');
-    arrow.textContent = '▼';
-  }
-}
-
-function clearHelp() {
-  helpMessages = [];
-  $('#helpChatBox').innerHTML = '';
-}
-
-async function sendHelp() {
-  const input = $('#helpInput');
-  const text = input.value.trim();
-  if (!text) return;
-  input.value = '';
-  addHelpMsg('user', text);
-  helpMessages.push({ role: 'user', content: text });
-  
-  $('#helpSendBtn').disabled = true;
-  $('#helpSendBtn').textContent = '...';
-  
-  // 添加 AI 消息占位
-  const box = $('#helpChatBox');
-  const aiDiv = document.createElement('div');
-  aiDiv.className = 'msg ai';
-  aiDiv.innerHTML = '<div class="msg-content"><div class="typing-indicator"><span></span><span></span><span></span></div></div>';
-  box.appendChild(aiDiv);
-  box.scrollTop = box.scrollHeight;
-  
-  let fullContent = '';
-  let thinking = '';
-  
-  try {
-    // 流式请求
-    const res = await fetch('/api/glm/chat/stream', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ model: 'glm-4.7', messages: helpMessages })
-    });
-    
-    const reader = res.body.getReader();
-    const decoder = new TextDecoder();
-    
-    while (true) {
-      const { done, value } = await reader.read();
-      if (done) break;
-      
-      const chunk = decoder.decode(value, { stream: true });
-      const lines = chunk.split('\\n');
-      
-      for (const line of lines) {
-        if (line.startsWith('data: ')) {
-          try {
-            const data = JSON.parse(line.slice(6));
-            if (data.type === 'content') {
-              fullContent += data.text;
-              // 更新显示
-              aiDiv.innerHTML = '<div class="msg-content">' + renderMarkdown(fullContent) + '</div>';
-              box.scrollTop = box.scrollHeight;
-            } else if (data.type === 'thinking') {
-              thinking += data.text;
-            } else if (data.type === 'error') {
-              fullContent = '错误: ' + data.text;
-            }
-          } catch (e) {}
-        }
-      }
-    }
-    
-    // 最终渲染（包含思考过程）
-    if (fullContent) {
-      aiDiv.remove();
-      addHelpMsg('ai', fullContent, thinking);
-      helpMessages.push({ role: 'assistant', content: fullContent });
-    }
-    
-  } catch (e) {
-    aiDiv.innerHTML = '<div class="msg-content">请求失败: ' + e.message + '</div>';
-  }
-  
-  $('#helpSendBtn').disabled = false;
-  $('#helpSendBtn').textContent = '发送';
-}
-
-function askQuick(question) {
-  $('#helpInput').value = question;
-  sendHelp();
-}
-'''
-
-JS_SCRIPTS = JS_UTILS + JS_TABS + JS_STATUS + JS_MODELS + JS_CHAT + JS_STATS + JS_LOGS + JS_ACCOUNTS + JS_FLOWS + JS_HELP
+JS_SCRIPTS = JS_UTILS + JS_TABS + JS_STATUS + JS_DOCS + JS_STATS + JS_LOGS + JS_ACCOUNTS + JS_LOGIN + JS_FLOWS
 
 
 # ==================== 组装最终 HTML ====================

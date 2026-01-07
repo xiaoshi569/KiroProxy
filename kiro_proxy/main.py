@@ -5,12 +5,11 @@ import httpx
 from pathlib import Path
 from contextlib import asynccontextmanager
 from fastapi import FastAPI, Request, HTTPException
-from fastapi.responses import HTMLResponse, StreamingResponse
+from fastapi.responses import HTMLResponse, StreamingResponse, JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
 
 from .config import MODELS_URL
 from .core import state, scheduler, stats_manager
-from .core.glm_api import glm_chat_completions, chat_with_glm_stream
 from .handlers import anthropic, openai, gemini, admin
 from .web.html import HTML_PAGE
 from .credential import generate_machine_id, get_kiro_version
@@ -371,103 +370,39 @@ async def api_account_usage(account_id: str):
     return await admin.get_account_usage_info(account_id)
 
 
-# ==================== GLM API (AI 助手) ====================
+# ==================== 文档 API ====================
 
-@app.post("/api/glm/chat")
-async def api_glm_chat(request: Request):
-    """GLM 聊天接口 (用于 AI 助手)"""
-    body = await request.json()
-    messages = body.get("messages", [])
-    model = body.get("model", "glm-4.7")
-    
-    # 读取 docs 目录下所有文档作为知识库
-    docs_content = ""
-    try:
-        docs_dir = Path(__file__).parent / "docs"
-        if docs_dir.exists():
-            for doc_file in docs_dir.glob("*.md"):
-                docs_content += f"\n\n---\n# {doc_file.stem}\n"
-                docs_content += doc_file.read_text(encoding="utf-8")
-    except:
-        pass
-    
-    # 如果 docs 为空，回退到 README
-    if not docs_content:
-        try:
-            readme_path = Path(__file__).parent.parent / "README.md"
-            if readme_path.exists():
-                docs_content = readme_path.read_text(encoding="utf-8")
-        except:
-            pass
-    
-    # 构建简洁的 System Prompt
-    system_prompt = f"""你是 Kiro Proxy 的专属助手。你只回答与 Kiro Proxy 相关的问题。
+# 文档标题映射
+DOC_TITLES = {
+    "01-quickstart": "快速开始",
+    "02-features": "功能特性",
+    "03-faq": "常见问题",
+    "04-api": "API 参考",
+}
 
-重要规则：
-1. 只根据下面的文档内容回答问题
-2. 回答要简洁，直接给出步骤或答案
-3. 不要自我介绍，不要问候语
-4. 如果用户问的不是 Kiro Proxy 相关问题，说"我只能回答 Kiro Proxy 相关问题"
-
-文档内容：
-{docs_content}"""
-    
-    # 注入 system prompt
-    final_messages = [{"role": "system", "content": system_prompt}]
-    for m in messages:
-        if m.get("role") != "system":
-            final_messages.append(m)
-    
-    return await glm_chat_completions(final_messages, model)
+@app.get("/api/docs")
+async def api_docs_list():
+    """获取文档列表"""
+    docs_dir = Path(__file__).parent / "docs"
+    docs = []
+    if docs_dir.exists():
+        for doc_file in sorted(docs_dir.glob("*.md")):
+            doc_id = doc_file.stem
+            title = DOC_TITLES.get(doc_id, doc_id)
+            docs.append({"id": doc_id, "title": title})
+    return {"docs": docs}
 
 
-@app.post("/api/glm/chat/stream")
-async def api_glm_chat_stream(request: Request):
-    """GLM 流式聊天接口"""
-    body = await request.json()
-    messages = body.get("messages", [])
-    model = body.get("model", "glm-4.7")
-    
-    # 读取 docs 目录
-    docs_content = ""
-    try:
-        docs_dir = Path(__file__).parent / "docs"
-        if docs_dir.exists():
-            for doc_file in docs_dir.glob("*.md"):
-                docs_content += f"\n\n---\n# {doc_file.stem}\n"
-                docs_content += doc_file.read_text(encoding="utf-8")
-    except:
-        pass
-    
-    if not docs_content:
-        try:
-            readme_path = Path(__file__).parent.parent / "README.md"
-            if readme_path.exists():
-                docs_content = readme_path.read_text(encoding="utf-8")
-        except:
-            pass
-    
-    system_prompt = f"""你是 Kiro Proxy 的专属助手。你只回答与 Kiro Proxy 相关的问题。
-
-重要规则：
-1. 只根据下面的文档内容回答问题
-2. 回答要简洁，直接给出步骤或答案
-3. 不要自我介绍，不要问候语
-4. 如果用户问的不是 Kiro Proxy 相关问题，说"我只能回答 Kiro Proxy 相关问题"
-
-文档内容：
-{docs_content}"""
-    
-    final_messages = [{"role": "system", "content": system_prompt}]
-    for m in messages:
-        if m.get("role") != "system":
-            final_messages.append(m)
-    
-    async def generate():
-        async for chunk in chat_with_glm_stream(final_messages, model):
-            yield f"data: {json.dumps(chunk, ensure_ascii=False)}\n\n"
-    
-    return StreamingResponse(generate(), media_type="text/event-stream")
+@app.get("/api/docs/{doc_id}")
+async def api_docs_content(doc_id: str):
+    """获取文档内容"""
+    docs_dir = Path(__file__).parent / "docs"
+    doc_file = docs_dir / f"{doc_id}.md"
+    if not doc_file.exists():
+        raise HTTPException(status_code=404, detail="文档不存在")
+    content = doc_file.read_text(encoding="utf-8")
+    title = DOC_TITLES.get(doc_id, doc_id)
+    return {"id": doc_id, "title": title, "content": content}
 
 
 # ==================== 启动 ====================

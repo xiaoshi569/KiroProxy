@@ -38,6 +38,7 @@
 - **多登录方式** - 支持 Google / GitHub / AWS Builder ID 三种登录方式
 - **流量监控** - 完整的 LLM 请求监控，支持搜索、过滤、导出
 - **浏览器选择** - 自动检测已安装浏览器，支持无痕模式
+- **文档中心** - 内置帮助文档，左侧目录 + 右侧 Markdown 渲染
 
 ### v1.4.0 功能
 - **Token 预刷新** - 后台每 5 分钟检查，提前 15 分钟自动刷新
@@ -168,6 +169,8 @@ Endpoint: http://localhost:8080/v1
 | `/api/stats` | GET | 获取统计信息 |
 | `/api/health-check` | POST | 手动触发健康检查 |
 | `/api/browsers` | GET | 获取可用浏览器列表 |
+| `/api/docs` | GET | 获取文档列表 |
+| `/api/docs/{id}` | GET | 获取文档内容 |
 
 ## 项目结构
 
@@ -202,6 +205,12 @@ kiro_proxy/
 │   ├── openai.py             # /v1/chat/completions
 │   ├── gemini.py             # /v1/models/{model}:generateContent
 │   └── admin.py              # 管理 API
+│
+├── docs/                      # 内置文档
+│   ├── 01-quickstart.md      # 快速开始
+│   ├── 02-features.md        # 功能特性
+│   ├── 03-faq.md             # 常见问题
+│   └── 04-api.md             # API 参考
 │
 └── web/
     └── html.py               # Web UI (组件化单文件)
