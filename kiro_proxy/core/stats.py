@@ -84,9 +84,12 @@ class StatsManager:
         """清理超过 24 小时的数据"""
         current_hour = int(time.time() // 3600)
         cutoff = current_hour - 24
-        self.hourly_requests = {
-            h: c for h, c in self.hourly_requests.items() if h > cutoff
-        }
+        # 保持 defaultdict 类型，避免后续访问新 key 时 KeyError
+        old_data = self.hourly_requests
+        self.hourly_requests = defaultdict(int)
+        for h, c in old_data.items():
+            if h > cutoff:
+                self.hourly_requests[h] = c
     
     def get_account_stats(self, account_id: str) -> dict:
         """获取账号统计"""
