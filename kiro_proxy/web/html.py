@@ -114,6 +114,7 @@ HTML_HEADER = '''
   <div class="tab" data-tab="logs">日志</div>
   <div class="tab" data-tab="api">API</div>
   <div class="tab" data-tab="docs">文档</div>
+  <div class="tab" data-tab="help">帮助</div>
 </div>
 '''
 
@@ -319,7 +320,67 @@ HTML_DOCS = '''
 </div>
 '''
 
-HTML_BODY = HTML_HEADER + HTML_CHAT + HTML_FLOWS + HTML_MONITOR + HTML_ACCOUNTS + HTML_LOGS + HTML_API + HTML_DOCS
+HTML_HELP = '''
+<div class="panel" id="help">
+  <div class="card">
+    <h3>AI 助手 <span style="font-size:0.75rem;color:var(--muted);font-weight:normal">问我如何使用 Kiro Proxy</span></h3>
+    <div style="margin-bottom:1rem">
+      <label style="font-size:0.8rem;color:var(--muted)">AI 服务地址</label>
+      <div class="input-row" style="margin-top:0.25rem">
+        <input type="text" id="helpApiUrl" placeholder="http://localhost:3000" value="http://localhost:3000" style="flex:2">
+        <select id="helpModel" style="flex:1">
+          <option value="glm-4.7">GLM-4.7</option>
+          <option value="glm-4.6">GLM-4.6</option>
+          <option value="gpt-4o">GPT-4o</option>
+          <option value="claude-sonnet-4">Claude Sonnet 4</option>
+        </select>
+      </div>
+    </div>
+    <div class="chat-box" id="helpChatBox" style="height:300px"></div>
+    <div class="input-row" style="margin-top:1rem">
+      <input type="text" id="helpInput" placeholder="问我任何关于 Kiro Proxy 的问题..." onkeydown="if(event.key==='Enter')sendHelp()">
+      <button onclick="sendHelp()" id="helpSendBtn">发送</button>
+    </div>
+    <div style="margin-top:0.75rem">
+      <span style="font-size:0.75rem;color:var(--muted)">快捷问题：</span>
+      <button class="secondary small" onclick="askQuick('如何配置 Claude Code 使用 Kiro Proxy？')">配置 Claude Code</button>
+      <button class="secondary small" onclick="askQuick('如何添加多个账号？')">添加账号</button>
+      <button class="secondary small" onclick="askQuick('遇到 429 错误怎么办？')">429 错误</button>
+      <button class="secondary small" onclick="askQuick('Token 过期了怎么刷新？')">刷新 Token</button>
+    </div>
+  </div>
+  <div class="card">
+    <h3>常见问题</h3>
+    <details style="margin-bottom:0.5rem">
+      <summary style="cursor:pointer;font-weight:500">如何获取 Kiro Token？</summary>
+      <p style="color:var(--muted);font-size:0.875rem;padding:0.5rem 0 0 1rem">
+        方式一：点击"在线登录"，选择 Google/GitHub/AWS 登录<br>
+        方式二：打开 Kiro IDE 登录后，点击"扫描 Token"
+      </p>
+    </details>
+    <details style="margin-bottom:0.5rem">
+      <summary style="cursor:pointer;font-weight:500">支持哪些 AI 客户端？</summary>
+      <p style="color:var(--muted);font-size:0.875rem;padding:0.5rem 0 0 1rem">
+        Claude Code (VSCode 插件)、Codex CLI、Gemini CLI 等支持 OpenAI/Anthropic 协议的客户端
+      </p>
+    </details>
+    <details style="margin-bottom:0.5rem">
+      <summary style="cursor:pointer;font-weight:500">为什么会出现 429 错误？</summary>
+      <p style="color:var(--muted);font-size:0.875rem;padding:0.5rem 0 0 1rem">
+        Kiro 有请求频率限制，超限后会返回 429。代理会自动将该账号冷却 5 分钟，并切换到其他可用账号。
+      </p>
+    </details>
+    <details>
+      <summary style="cursor:pointer;font-weight:500">对话太长怎么办？</summary>
+      <p style="color:var(--muted);font-size:0.875rem;padding:0.5rem 0 0 1rem">
+        Kiro 有输入长度限制。在 Claude Code 中输入 /clear 清空对话，然后告诉 AI 你之前在做什么。
+      </p>
+    </details>
+  </div>
+</div>
+'''
+
+HTML_BODY = HTML_HEADER + HTML_CHAT + HTML_FLOWS + HTML_MONITOR + HTML_ACCOUNTS + HTML_LOGS + HTML_API + HTML_DOCS + HTML_HELP
 
 
 # ==================== JavaScript ====================
@@ -1090,7 +1151,94 @@ function escapeHtml(text){
 }
 '''
 
-JS_SCRIPTS = JS_UTILS + JS_TABS + JS_STATUS + JS_MODELS + JS_CHAT + JS_STATS + JS_LOGS + JS_ACCOUNTS + JS_FLOWS
+JS_HELP = '''
+// AI 助手
+const HELP_SYSTEM_PROMPT = `你是 Kiro API Proxy 的 AI 助手。Kiro Proxy 是一个 Kiro IDE API 反向代理服务器。
+
+主要功能：
+- 多协议支持：OpenAI / Anthropic / Gemini 三种协议
+- 多账号轮询：支持添加多个 Kiro 账号，自动负载均衡
+- Token 自动刷新：检测过期自动刷新
+- 配额管理：429 自动冷却和恢复
+- 流量监控：完整的 LLM 请求监控
+
+配置方法：
+1. Claude Code 配置：Base URL: http://localhost:8080, API Key: any, 模型: claude-sonnet-4
+2. Codex CLI 配置：Endpoint: http://localhost:8080/v1, API Key: any, 模型: gpt-4o
+
+获取 Token：
+- 方式一：在线登录 - 点击"在线登录"，选择 Google/GitHub/AWS 登录
+- 方式二：扫描 Token - 打开 Kiro IDE 登录后，点击"扫描 Token"
+
+常见问题：
+- 429 错误：Kiro 有请求频率限制，代理会自动冷却该账号并切换到其他账号
+- 对话太长：在 Claude Code 中输入 /clear 清空对话
+- Token 过期：代理会自动刷新，也可手动点击"刷新 Token"
+
+请用简洁友好的中文回答用户问题。`;
+
+let helpMessages = [];
+
+function addHelpMsg(role, text) {
+  const box = $('#helpChatBox');
+  const div = document.createElement('div');
+  div.className = 'msg ' + (role === 'user' ? 'user' : 'ai');
+  div.innerHTML = '<span>' + text.replace(/</g, '&lt;').replace(/\\n/g, '<br>') + '</span>';
+  box.appendChild(div);
+  box.scrollTop = box.scrollHeight;
+}
+
+async function sendHelp() {
+  const input = $('#helpInput');
+  const text = input.value.trim();
+  if (!text) return;
+  input.value = '';
+  addHelpMsg('user', text);
+  helpMessages.push({ role: 'user', content: text });
+  
+  $('#helpSendBtn').disabled = true;
+  $('#helpSendBtn').textContent = '...';
+  
+  const apiUrl = $('#helpApiUrl').value.trim() || 'http://localhost:3000';
+  const model = $('#helpModel').value;
+  
+  try {
+    const allMessages = [
+      { role: 'system', content: HELP_SYSTEM_PROMPT },
+      ...helpMessages
+    ];
+    
+    const res = await fetch(apiUrl + '/v1/chat/completions', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ model, messages: allMessages, stream: false })
+    });
+    
+    const data = await res.json();
+    if (data.choices && data.choices[0]) {
+      const reply = data.choices[0].message.content;
+      addHelpMsg('ai', reply);
+      helpMessages.push({ role: 'assistant', content: reply });
+    } else if (data.error) {
+      addHelpMsg('ai', '错误: ' + (data.error.message || JSON.stringify(data.error)));
+    } else {
+      addHelpMsg('ai', '无法获取回复');
+    }
+  } catch (e) {
+    addHelpMsg('ai', '请求失败: ' + e.message + '\\n\\n请确保 AI 服务已启动（如 zhipu-ai-proxy）');
+  }
+  
+  $('#helpSendBtn').disabled = false;
+  $('#helpSendBtn').textContent = '发送';
+}
+
+function askQuick(question) {
+  $('#helpInput').value = question;
+  sendHelp();
+}
+'''
+
+JS_SCRIPTS = JS_UTILS + JS_TABS + JS_STATUS + JS_MODELS + JS_CHAT + JS_STATS + JS_LOGS + JS_ACCOUNTS + JS_FLOWS + JS_HELP
 
 
 # ==================== 组装最终 HTML ====================
