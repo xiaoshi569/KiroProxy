@@ -7,7 +7,7 @@ from fastapi import Request, HTTPException
 from fastapi.responses import StreamingResponse
 
 from ..config import KIRO_API_URL, map_model_name
-from ..core import state, RetryableRequest, is_retryable_error
+from ..core import state, RetryableRequest, is_retryable_error, stats_manager
 from ..core.state import RequestLog
 from ..credential import quota_manager
 from ..kiro_api import build_headers, build_kiro_request, parse_event_stream_full, is_quota_exceeded_error
@@ -396,5 +396,12 @@ async def _handle_non_stream(kiro_request, headers, account, model, log_id, star
                     duration_ms=duration,
                     error=error_msg
                 ))
+                # 记录统计
+                stats_manager.record_request(
+                    account_id=current_account.id if current_account else "unknown",
+                    model=model,
+                    success=status_code == 200,
+                    latency_ms=duration
+                )
     
     raise HTTPException(503, "All retries exhausted")

@@ -9,7 +9,7 @@ from fastapi import Request, HTTPException
 from fastapi.responses import StreamingResponse
 
 from ..config import KIRO_API_URL, map_model_name
-from ..core import state, is_retryable_error
+from ..core import state, is_retryable_error, stats_manager
 from ..core.state import RequestLog
 from ..kiro_api import build_headers, build_kiro_request, parse_event_stream, is_quota_exceeded_error
 from ..converters import generate_session_id, convert_openai_messages_to_kiro, extract_images_from_content
@@ -167,6 +167,14 @@ async def handle_chat_completions(request: Request):
         duration_ms=duration,
         error=error_msg
     ))
+    
+    # 记录统计
+    stats_manager.record_request(
+        account_id=current_account.id if current_account else "unknown",
+        model=model,
+        success=status_code == 200,
+        latency_ms=duration
+    )
     
     if stream:
         async def generate():

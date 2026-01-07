@@ -9,8 +9,8 @@ from dataclasses import asdict
 from fastapi import Request, HTTPException, Query
 
 from ..config import TOKEN_PATH, MODELS_URL
-from ..core import state, Account
-from ..credential import quota_manager, generate_machine_id, get_kiro_version
+from ..core import state, Account, stats_manager
+from ..credential import quota_manager, generate_machine_id, get_kiro_version, CredentialStatus
 
 
 async def get_status():
@@ -342,4 +342,105 @@ async def get_kiro_login_url():
         ],
         "token_path": str(TOKEN_PATH),
         "token_exists": TOKEN_PATH.exists()
+    }
+
+
+async def get_detailed_stats():
+    """获取详细统计信息"""
+    basic_stats = state.get_stats()
+    detailed = stats_manager.get_all_stats()
+    
+    return {
+        **basic_stats,
+        "detailed": detailed
+    }
+
+
+async def run_health_check():
+    """手动触发健康检查"""
+    results = []
+    
+    for acc in state.accounts:
+        if not acc.enabled:
+            results.append({
+                "id": acc.id,
+                "name": acc.name,
+                "status": "disabled",
+                "healthy": False
+            })
+            continue
+        
+        try:
+            token = acc.get_token()
+            if not token:
+                acc.status = CredentialStatus.UNHEALTHY
+                results.append({
+                    "id": acc.id,
+                    "name": acc.name,
+                    "status": "no_token",
+                    "healthy": False
+                })
+                continue
+            
+            headers = {
+                "Authorization": f"Bearer {token}",
+                "content-type": "application/json"
+            }
+            
+            async with httpx.AsyncClient(verify=False, timeout=10) as client:
+                resp = await client.get(
+                    MODELS_URL,
+                    headers=headers,
+                    params={"origin": "AI_EDITOR"}
+                )
+                
+                if resp.status_code == 200:
+                    if acc.status == CredentialStatus.UNHEALTHY:
+                        acc.status = CredentialStatus.ACTIVE
+                    results.append({
+                        "id": acc.id,
+                        "name": acc.name,
+                        "status": "healthy",
+                        "healthy": True,
+                        "latency_ms": resp.elapsed.total_seconds() * 1000
+                    })
+                elif resp.status_code == 401:
+                    acc.status = CredentialStatus.UNHEALTHY
+                    results.append({
+                        "id": acc.id,
+                        "name": acc.name,
+                        "status": "auth_failed",
+                        "healthy": False
+                    })
+                elif resp.status_code == 429:
+                    results.append({
+                        "id": acc.id,
+                        "name": acc.name,
+                        "status": "rate_limited",
+                        "healthy": True  # 限流不代表不健康
+                    })
+                else:
+                    results.append({
+                        "id": acc.id,
+                        "name": acc.name,
+                        "status": f"error_{resp.status_code}",
+                        "healthy": False
+                    })
+                    
+        except Exception as e:
+            results.append({
+                "id": acc.id,
+                "name": acc.name,
+                "status": "error",
+                "healthy": False,
+                "error": str(e)
+            })
+    
+    healthy_count = len([r for r in results if r["healthy"]])
+    return {
+        "ok": True,
+        "total": len(results),
+        "healthy": healthy_count,
+        "unhealthy": len(results) - healthy_count,
+        "results": results
     }

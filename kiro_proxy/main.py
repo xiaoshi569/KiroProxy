@@ -3,17 +3,29 @@ import json
 import uuid
 import httpx
 from pathlib import Path
+from contextlib import asynccontextmanager
 from fastapi import FastAPI, Request, HTTPException
 from fastapi.responses import HTMLResponse, StreamingResponse
 from fastapi.middleware.cors import CORSMiddleware
 
 from .config import MODELS_URL
-from .core import state
+from .core import state, scheduler, stats_manager
 from .handlers import anthropic, openai, gemini, admin
 from .web.html import HTML_PAGE
 from .credential import generate_machine_id, get_kiro_version
 
-app = FastAPI(title="Kiro API Proxy", docs_url="/docs", redoc_url=None)
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    """应用生命周期管理"""
+    # 启动时
+    await scheduler.start()
+    yield
+    # 关闭时
+    await scheduler.stop()
+
+
+app = FastAPI(title="Kiro API Proxy", docs_url="/docs", redoc_url=None, lifespan=lifespan)
 
 app.add_middleware(
     CORSMiddleware,
@@ -216,12 +228,24 @@ async def api_login_url():
     return await admin.get_kiro_login_url()
 
 
+@app.get("/api/stats/detailed")
+async def api_detailed_stats():
+    """获取详细统计信息"""
+    return await admin.get_detailed_stats()
+
+
+@app.post("/api/health-check")
+async def api_health_check():
+    """手动触发健康检查"""
+    return await admin.run_health_check()
+
+
 # ==================== 启动 ====================
 
 def run(port: int = 8080):
     import uvicorn
     print(f"\n{'='*50}")
-    print(f"  Kiro API Proxy v1.2.1")
+    print(f"  Kiro API Proxy v1.4.0")
     print(f"  http://localhost:{port}")
     print(f"{'='*50}\n")
     uvicorn.run(app, host="0.0.0.0", port=port)
