@@ -146,19 +146,31 @@ async def chat_with_glm(
         'x-timestamp': timestamp,
     }
     
-    # 转换消息格式
+    # 转换消息格式，将 system 消息合并到第一条 user 消息
     cn_messages = []
+    system_content = ''
+    
     for m in messages:
+        role = m.get('role', 'user')
         content = m.get('content', '')
-        if isinstance(content, str):
+        if isinstance(content, list):
+            content = ' '.join([c.get('text', '') for c in content if c.get('type') == 'text'])
+        
+        if role == 'system':
+            system_content = content
+        elif role == 'user':
+            # 如果有 system 消息，合并到第一条 user 消息
+            if system_content and not cn_messages:
+                content = f"[系统指令]\n{system_content}\n\n[用户问题]\n{content}"
+                system_content = ''
             cn_messages.append({
-                'role': m['role'],
+                'role': 'user',
                 'content': [{'type': 'text', 'text': content}]
             })
-        else:
+        elif role == 'assistant':
             cn_messages.append({
-                'role': m['role'],
-                'content': [{'type': 'text', 'text': str(content)}]
+                'role': 'assistant',
+                'content': [{'type': 'text', 'text': content}]
             })
     
     body = {
