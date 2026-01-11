@@ -72,9 +72,14 @@ class KiroStreamParser:
                 try:
                     payload = json.loads(self.buffer[payload_start:payload_end].decode('utf-8'))
                     
-                    # 文本内容
+                    # 文本内容 - Kiro 直接返回 {"content": "..."} 格式
                     if 'assistantResponseEvent' in payload:
                         content = payload['assistantResponseEvent'].get('content', '')
+                        if content:
+                            texts.append(content)
+                    elif 'content' in payload and event_type != 'toolUseEvent':
+                        # 直接的 content 字段
+                        content = payload.get('content', '')
                         if content:
                             texts.append(content)
                     
