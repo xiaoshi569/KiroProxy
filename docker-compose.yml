@@ -1,0 +1,17 @@
+version: '3.8'
+
+services:
+  kiro-proxy:
+    image: ghcr.io/xiaoshi569/kiroproxy:latest
+    # 或者本地构建: build: .
+    container_name: kiro-proxy
+    ports:
+      - "8080:8080"
+    volumes:
+      - kiro-data:/root/.kiro-proxy
+    restart: unless-stopped
+    environment:
+      - TZ=Asia/Shanghai
+
+volumes:
+  kiro-data:
