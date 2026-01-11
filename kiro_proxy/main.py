@@ -85,29 +85,38 @@ async def models():
             resp = await client.get(MODELS_URL, headers=headers, params={"origin": "AI_EDITOR"})
             if resp.status_code == 200:
                 data = resp.json()
-                return {
-                    "object": "list",
-                    "data": [
-                        {
-                            "id": m["modelId"],
-                            "object": "model",
-                            "owned_by": "kiro",
-                            "name": m["modelName"],
-                        }
-                        for m in data.get("models", [])
-                    ]
-                }
+                base_models = [
+                    {
+                        "id": m["modelId"],
+                        "object": "model",
+                        "owned_by": "kiro",
+                        "name": m["modelName"],
+                    }
+                    for m in data.get("models", [])
+                ]
+                # 添加假流式前缀版本
+                fake_stream_models = [
+                    {"id": f"假流式/{m['id']}", "object": "model", "owned_by": "kiro", "name": f"假流式/{m['name']}"}
+                    for m in base_models
+                ]
+                return {"object": "list", "data": base_models + fake_stream_models}
     except Exception:
         pass
     
     # 降级返回静态列表
-    return {"object": "list", "data": [
+    base_models = [
         {"id": "auto", "object": "model", "owned_by": "kiro", "name": "Auto"},
         {"id": "claude-sonnet-4.5", "object": "model", "owned_by": "kiro", "name": "Claude Sonnet 4.5"},
         {"id": "claude-sonnet-4", "object": "model", "owned_by": "kiro", "name": "Claude Sonnet 4"},
         {"id": "claude-haiku-4.5", "object": "model", "owned_by": "kiro", "name": "Claude Haiku 4.5"},
         {"id": "claude-opus-4.5", "object": "model", "owned_by": "kiro", "name": "Claude Opus 4.5"},
-    ]}
+    ]
+    # 添加假流式前缀版本
+    fake_stream_models = [
+        {"id": f"假流式/{m['id']}", "object": "model", "owned_by": "kiro", "name": f"假流式/{m['name']}"}
+        for m in base_models
+    ]
+    return {"object": "list", "data": base_models + fake_stream_models}
 
 
 # Anthropic 协议

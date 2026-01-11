@@ -8,7 +8,7 @@ from datetime import datetime
 from fastapi import Request, HTTPException
 from fastapi.responses import StreamingResponse
 
-from ..config import KIRO_API_URL, map_model_name
+from ..config import KIRO_API_URL, map_model_name, parse_stream_mode
 from ..core import state, is_retryable_error, stats_manager
 from ..core.state import RequestLog
 from ..core.history_manager import HistoryManager, get_history_config, is_content_length_error
@@ -18,13 +18,120 @@ from ..kiro_api import build_headers, build_kiro_request, parse_event_stream, is
 from ..converters import generate_session_id, convert_openai_messages_to_kiro, extract_images_from_content
 
 
+class KiroStreamParser:
+    """Kiro event-stream 流式解析器，支持文本和工具调用"""
+    
+    def __init__(self):
+        self.buffer = b""
+        self.tool_buffers = {}  # tool_id -> {name, input_parts}
+        self.processed_pos = 0
+    
+    def feed(self, data: bytes) -> tuple[list[str], list[dict]]:
+        """
+        喂入数据，返回 (文本列表, 完成的工具调用列表)
+        """
+        self.buffer += data
+        texts = []
+        completed_tools = []
+        
+        pos = self.processed_pos
+        while pos < len(self.buffer):
+            if pos + 12 > len(self.buffer):
+                break  # 不完整的帧头，等待更多数据
+            
+            total_len = int.from_bytes(self.buffer[pos:pos+4], 'big')
+            headers_len = int.from_bytes(self.buffer[pos+4:pos+8], 'big')
+            
+            if total_len == 0:
+                pos += 4
+                continue
+            
+            if pos + total_len > len(self.buffer):
+                break  # 不完整的帧，等待更多数据
+            
+            # 解析 headers 判断事件类型
+            header_start = pos + 12
+            header_end = header_start + headers_len
+            headers_data = self.buffer[header_start:header_end]
+            
+            event_type = None
+            try:
+                headers_str = headers_data.decode('utf-8', errors='ignore')
+                if 'toolUseEvent' in headers_str:
+                    event_type = 'toolUseEvent'
+                elif 'assistantResponseEvent' in headers_str:
+                    event_type = 'assistantResponseEvent'
+            except:
+                pass
+            
+            # 解析 payload
+            payload_start = pos + 12 + headers_len
+            payload_end = pos + total_len - 4
+            
+            if payload_start < payload_end:
+                try:
+                    payload = json.loads(self.buffer[payload_start:payload_end].decode('utf-8'))
+                    
+                    # 文本内容
+                    if 'assistantResponseEvent' in payload:
+                        content = payload['assistantResponseEvent'].get('content', '')
+                        if content:
+                            texts.append(content)
+                    
+                    # 工具调用
+                    if event_type == 'toolUseEvent' or 'toolUseId' in payload:
+                        tool_id = payload.get('toolUseId', '')
+                        tool_name = payload.get('name', '')
+                        tool_input = payload.get('input', '')
+                        
+                        if tool_id:
+                            if tool_id not in self.tool_buffers:
+                                self.tool_buffers[tool_id] = {"name": tool_name, "input_parts": []}
+                            if tool_name and not self.tool_buffers[tool_id]["name"]:
+                                self.tool_buffers[tool_id]["name"] = tool_name
+                            if tool_input:
+                                self.tool_buffers[tool_id]["input_parts"].append(tool_input)
+                except:
+                    pass
+            
+            pos += total_len
+        
+        self.processed_pos = pos
+        return texts, completed_tools
+    
+    def get_tool_calls(self) -> list[dict]:
+        """获取所有工具调用（流结束时调用）"""
+        tools = []
+        for tool_id, data in self.tool_buffers.items():
+            input_str = "".join(data["input_parts"])
+            try:
+                input_json = json.loads(input_str)
+            except:
+                input_json = {"raw": input_str}
+            
+            tools.append({
+                "id": tool_id,
+                "type": "function",
+                "function": {
+                    "name": data["name"],
+                    "arguments": json.dumps(input_json)
+                }
+            })
+        return tools
+
+
 async def handle_chat_completions(request: Request):
     """处理 /v1/chat/completions 请求"""
     start_time = time.time()
     log_id = uuid.uuid4().hex[:8]
     
     body = await request.json()
-    model = map_model_name(body.get("model", "claude-sonnet-4"))
+    raw_model = body.get("model", "claude-sonnet-4")
+    
+    # 解析流式模式前缀
+    model_without_prefix, use_fake_stream = parse_stream_mode(raw_model)
+    model = map_model_name(model_without_prefix)
+    
     messages = body.get("messages", [])
     stream = body.get("stream", False)
     tools = body.get("tools", None)
@@ -118,6 +225,128 @@ async def handle_chat_completions(request: Request):
     content = ""
     current_account = account
     max_retries = 2
+    
+    # 真流式模式：跳过重试循环，直接返回流式响应
+    if stream and not use_fake_stream:
+        async def generate_real_stream():
+            nonlocal current_account, status_code, error_msg
+            stream_start = time.time()
+            parser = KiroStreamParser()
+            
+            try:
+                async with httpx.AsyncClient(verify=False, timeout=120) as client:
+                    async with client.stream("POST", KIRO_API_URL, json=kiro_request, headers=headers) as resp:
+                        status_code = resp.status_code
+                        
+                        if resp.status_code != 200:
+                            error_text = await resp.aread()
+                            error_msg = error_text.decode('utf-8', errors='ignore')[:500]
+                            
+                            # 记录错误统计
+                            duration = (time.time() - stream_start) * 1000
+                            stats_manager.record_request(
+                                account_id=current_account.id,
+                                model=model,
+                                success=False,
+                                latency_ms=duration
+                            )
+                            
+                            error_data = {
+                                "id": f"chatcmpl-{log_id}",
+                                "object": "chat.completion.chunk",
+                                "created": int(time.time()),
+                                "model": model,
+                                "choices": [{"index": 0, "delta": {"content": f"[Error {resp.status_code}]: {error_msg[:100]}"}, "finish_reason": "stop"}]
+                            }
+                            yield f"data: {json.dumps(error_data)}\n\n"
+                            yield "data: [DONE]\n\n"
+                            return
+                        
+                        async for chunk in resp.aiter_bytes():
+                            texts, _ = parser.feed(chunk)
+                            
+                            for text in texts:
+                                data = {
+                                    "id": f"chatcmpl-{log_id}",
+                                    "object": "chat.completion.chunk",
+                                    "created": int(time.time()),
+                                    "model": model,
+                                    "choices": [{"index": 0, "delta": {"content": text}, "finish_reason": None}]
+                                }
+                                yield f"data: {json.dumps(data)}\n\n"
+                        
+                        # 流结束，检查工具调用
+                        tool_calls = parser.get_tool_calls()
+                        if tool_calls:
+                            tool_data = {
+                                "id": f"chatcmpl-{log_id}",
+                                "object": "chat.completion.chunk",
+                                "created": int(time.time()),
+                                "model": model,
+                                "choices": [{
+                                    "index": 0,
+                                    "delta": {"tool_calls": tool_calls},
+                                    "finish_reason": None
+                                }]
+                            }
+                            yield f"data: {json.dumps(tool_data)}\n\n"
+                            
+                            end_data = {
+                                "id": f"chatcmpl-{log_id}",
+                                "object": "chat.completion.chunk",
+                                "created": int(time.time()),
+                                "model": model,
+                                "choices": [{"index": 0, "delta": {}, "finish_reason": "tool_calls"}]
+                            }
+                            yield f"data: {json.dumps(end_data)}\n\n"
+                        else:
+                            end_data = {
+                                "id": f"chatcmpl-{log_id}",
+                                "object": "chat.completion.chunk",
+                                "created": int(time.time()),
+                                "model": model,
+                                "choices": [{"index": 0, "delta": {}, "finish_reason": "stop"}]
+                            }
+                            yield f"data: {json.dumps(end_data)}\n\n"
+                        
+                        yield "data: [DONE]\n\n"
+                        
+                        # 记录成功统计
+                        current_account.request_count += 1
+                        current_account.last_used = time.time()
+                        get_rate_limiter().record_request(current_account.id)
+                        
+                        duration = (time.time() - stream_start) * 1000
+                        stats_manager.record_request(
+                            account_id=current_account.id,
+                            model=model,
+                            success=True,
+                            latency_ms=duration
+                        )
+                        
+            except Exception as e:
+                error_msg = str(e)
+                status_code = 500
+                
+                duration = (time.time() - stream_start) * 1000
+                stats_manager.record_request(
+                    account_id=current_account.id if current_account else "unknown",
+                    model=model,
+                    success=False,
+                    latency_ms=duration
+                )
+                
+                error_data = {
+                    "id": f"chatcmpl-{log_id}",
+                    "object": "chat.completion.chunk",
+                    "created": int(time.time()),
+                    "model": model,
+                    "choices": [{"index": 0, "delta": {"content": f"[Stream Error: {str(e)}]"}, "finish_reason": "stop"}]
+                }
+                yield f"data: {json.dumps(error_data)}\n\n"
+                yield "data: [DONE]\n\n"
+        
+        return StreamingResponse(generate_real_stream(), media_type="text/event-stream")
     
     for retry in range(max_retries + 1):
         try:
@@ -263,7 +492,8 @@ async def handle_chat_completions(request: Request):
     )
     
     if stream:
-        async def generate():
+        # 伪流式：先获取完整响应，再分块发送
+        async def generate_fake_stream():
             for chunk in [content[i:i+20] for i in range(0, len(content), 20)]:
                 data = {
                     "id": f"chatcmpl-{log_id}",
@@ -285,7 +515,7 @@ async def handle_chat_completions(request: Request):
             yield f"data: {json.dumps(end_data)}\n\n"
             yield "data: [DONE]\n\n"
         
-        return StreamingResponse(generate(), media_type="text/event-stream")
+        return StreamingResponse(generate_fake_stream(), media_type="text/event-stream")
     
     return {
         "id": f"chatcmpl-{log_id}",

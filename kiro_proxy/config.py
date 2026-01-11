@@ -47,6 +47,20 @@ MODEL_MAPPING = {
 
 KIRO_MODELS = {"auto", "claude-sonnet-4.5", "claude-sonnet-4", "claude-haiku-4.5", "claude-opus-4.5"}
 
+# 流式模式前缀
+FAKE_STREAM_PREFIX = "假流式/"
+
+def parse_stream_mode(model: str) -> tuple[str, bool]:
+    """解析模型名称，返回 (实际模型名, 是否伪流式)
+    
+    例如:
+    - "假流式/claude-opus-4.5" -> ("claude-opus-4.5", True)
+    - "claude-opus-4.5" -> ("claude-opus-4.5", False)
+    """
+    if model and model.startswith(FAKE_STREAM_PREFIX):
+        return model[len(FAKE_STREAM_PREFIX):], True
+    return model, False
+
 def map_model_name(model: str) -> str:
     """将外部模型名称映射到 Kiro 支持的名称"""
     if not model:
