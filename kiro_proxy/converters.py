@@ -411,7 +411,7 @@ def convert_kiro_response_to_anthropic(result: dict, model: str, msg_id: str) ->
         "model": model,
         "stop_reason": result["stop_reason"],
         "stop_sequence": None,
-        "usage": {"input_tokens": 100, "output_tokens": 100}
+        "usage": {"input_tokens": 0, "output_tokens": 0}
     }
 
 
@@ -959,8 +959,8 @@ def convert_kiro_response_to_gemini(result: dict, model: str) -> dict:
             "index": 0
         }],
         "usageMetadata": {
-            "promptTokenCount": 100,
-            "candidatesTokenCount": 100,
-            "totalTokenCount": 200
+            "promptTokenCount": 0,
+            "candidatesTokenCount": 0,
+            "totalTokenCount": 0
         }
     }

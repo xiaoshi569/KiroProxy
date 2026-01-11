@@ -385,7 +385,7 @@ async def _handle_stream(kiro_request, headers, account, model, log_id, start_ti
                                 yield f'data: {{"type":"content_block_stop","index":{i}}}\n\n'
 
                         stop_reason = result["stop_reason"]
-                        yield f'data: {{"type":"message_delta","delta":{{"stop_reason":"{stop_reason}","stop_sequence":null}},"usage":{{"output_tokens":100}}}}\n\n'
+                        yield f'data: {{"type":"message_delta","delta":{{"stop_reason":"{stop_reason}","stop_sequence":null}},"usage":{{"output_tokens":0}}}}\n\n'
                         yield f'data: {{"type":"message_stop"}}\n\n'
 
                         # 完成 Flow
